@@ -22,6 +22,35 @@ def set_driver(driver_path,headless_flg):
     # ChromeのWebDriverオブジェクトを作成する。(chromedriver.exeのパスにPythonソースのパスを使用)
     return Chrome(executable_path=os.getcwd() + "\\" + driver_path,options=options)
 
+### 年収取得
+def getNensyu(driver):
+
+    str=''
+    kInfo = driver.find_elements_by_class_name('cassetteRecruit__main')
+    index=0
+    # 企業ループ
+    while index < len(kInfo):
+        cnt=0
+        # テーブル項目ループ
+        while cnt < len(kInfo[index].find_elements_by_class_name('tableCondition__head')):
+            hNensyu=kInfo[index].find_elements_by_class_name('tableCondition__head')
+            kInfo=kInfo[index].find_elements_by_class_name('tableCondition__body')
+            if hNensyu[4]=='初年度年収':
+                str=kInfo[4]
+            else:
+                str=''
+            rnensyuet.append(str)
+
+    # elem21 = elem1[0].find_elements_by_class_name('tableCondition__head')
+    # elem22 = elem1[0].find_elements_by_class_name('tableCondition__body')
+    # print("elem1[0].text=", elem1[0].text)
+    # print("elem21[4].text=", elem21[4].text)  # 初年度年収
+    # print("elem22[4].text=", elem22[4].text)  # 初年度年収
+
+    return ret
+
+
+
 ### main処理
 def main():
     search_keyword="高収入"
@@ -47,17 +76,35 @@ def main():
     copy_list=driver.find_elements_by_class_name("cassetteRecruit__copy")   #タイトル
     status_list=driver.find_elements_by_class_name("labelEmploymentStatus") #契約形態
 
-    # テストコード
-    elem1 = driver.find_elements_by_class_name('cassetteRecruit__main')
-    print("elem1[0].text=", elem1[0].text)
-    return
+    #年収取得
+    nensyu_list=[]
+    kInfo = driver.find_elements_by_class_name('cassetteRecruit__main')
+    index=0
 
+    # 企業ループ
+    while index < len(kInfo):
+        
+        head=kInfo[index].find_elements_by_class_name('tableCondition__head')
+        body=kInfo[index].find_elements_by_class_name('tableCondition__body')
+
+        # テーブル項目ループ
+        cnt=0
+        while cnt < len(kInfo[index].find_elements_by_class_name('tableCondition__head')):
+            if head[cnt].text=='初年度年収':
+                str=body[cnt].text
+            else:
+                str=''
+            cnt = cnt + 1
+        nensyu_list.append(str)
+        index = index + 1
+        
     # 1ページ分繰り返し
-    print("{},{},{}".format(len(copy_list),len(status_list),len(name_list)))
-    for name,copy,status in zip(name_list,copy_list,status_list):
+    print("{},{},{},{}".format(len(copy_list),len(status_list),len(name_list),len(nensyu_list)))
+    for name,copy,status,nensyu in zip(name_list,copy_list,status_list,nensyu_list):
         print(name.text)
         print(copy.text)
         print(status.text)
+        print(nensyu)
 
 
 ### 直接起動された場合はmain()を起動(モジュールとして呼び出された場合は起動しないようにするため)
