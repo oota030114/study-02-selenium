@@ -79,24 +79,19 @@ def main():
     #年収取得
     nensyu_list=[]
     kInfo = driver.find_elements_by_class_name('cassetteRecruit__main')
-    index=0
 
     # 企業ループ
-    while index < len(kInfo):
-        
+    for index in  range(len(kInfo)):
         head=kInfo[index].find_elements_by_class_name('tableCondition__head')
         body=kInfo[index].find_elements_by_class_name('tableCondition__body')
 
         # テーブル項目ループ
-        cnt=0
-        while cnt < len(kInfo[index].find_elements_by_class_name('tableCondition__head')):
+        for cnt in range(len(kInfo[index].find_elements_by_class_name('tableCondition__head'))):
             if head[cnt].text=='初年度年収':
                 str=body[cnt].text
             else:
                 str=''
-            cnt = cnt + 1
         nensyu_list.append(str)
-        index = index + 1
         
     # 1ページ分繰り返し
     print("{},{},{},{}".format(len(copy_list),len(status_list),len(name_list),len(nensyu_list)))
