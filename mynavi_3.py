@@ -3,12 +3,6 @@ from selenium.webdriver import Chrome, ChromeOptions
 import time
 import selenium.webdriver as aa
 
-### 追加
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.common.by import By
-from selenium.common.exceptions import TimeoutException
-
 ### Chromeを起動する関数
 def set_driver(driver_path,headless_flg):
     # Chromeドライバーの読み込み
@@ -108,11 +102,8 @@ def getTable(driver,colName):
         
     return table_list
 
-### main処理
-def main():
-    search_keyword="高収入"
-    # driverを起動
-    driver=set_driver("chromedriver.exe",False)
+
+def outFirsttPage(driver):
     # Webサイトを開く
     driver.get("https://tenshoku.mynavi.jp/")
     time.sleep(5)
@@ -121,13 +112,13 @@ def main():
     time.sleep(2)
     # ポップアップを閉じる
     driver.execute_script('document.querySelector(".karte-close").click()')
-    
     # 検索窓に入力
+    search_keyword="高収入"
     driver.find_element_by_class_name("topSearch__text").send_keys(search_keyword)
     # 検索ボタンクリック
     driver.find_element_by_class_name("topSearch__button").click()
 
-    # 検索結果の一番上の会社名を取得
+    # 検索結果を取得
     name_list=getName(driver)       #社名
     copy_list=getCopy(driver)       #コピー
     status_list=getStatus(driver)   #契約形態
@@ -139,8 +130,7 @@ def main():
     kyuyo_list=getTable(driver,'給与')
     nensyu_list=getTable(driver,'初年度年収')
     
-
-    # 1ページ分繰り返し
+    # ページ情報を出力
     print("{},{},{},{},{},{},{},{},{}".format(len(name_list),len(copy_list),len(status_list),len(zyoken_list),len(work_list),len(taisyo_list),len(kinmu_list),len(kyuyo_list),len(nensyu_list)))
     for name,copy,status,zyoken,work,taisyo,kinmu,kyuyo,nensyu in zip(name_list, copy_list, status_list, zyoken_list, work_list, taisyo_list, kinmu_list, kyuyo_list, nensyu_list):
         print(name)
@@ -152,13 +142,55 @@ def main():
         print(kinmu)
         print(kyuyo)
         print(nensyu)
+    return
 
+def outNextPage(driver, url):
+    # Webサイトを開く
+    driver.get(url)
+    time.sleep(5)
 
-    # 2ページ名以降の処理
-    element=driver.find_element_by_class_name('pager__item')
-    url=element.__getattribute__("href")
-    print("url=",url)
+    # 検索結果を取得
+    name_list=getName(driver)       #社名
+    copy_list=getCopy(driver)       #コピー
+    status_list=getStatus(driver)   #契約形態
+    zyoken_list=getZyoken(driver)   #応募条件
 
+    work_list=getTable(driver,'仕事内容')
+    taisyo_list=getTable(driver,'対象となる方')
+    kinmu_list=getTable(driver,'勤務地')
+    kyuyo_list=getTable(driver,'給与')
+    nensyu_list=getTable(driver,'初年度年収')
+    
+    # ページ情報を出力
+    print("{},{},{},{},{},{},{},{},{}".format(len(name_list),len(copy_list),len(status_list),len(zyoken_list),len(work_list),len(taisyo_list),len(kinmu_list),len(kyuyo_list),len(nensyu_list)))
+    for name,copy,status,zyoken,work,taisyo,kinmu,kyuyo,nensyu in zip(name_list, copy_list, status_list, zyoken_list, work_list, taisyo_list, kinmu_list, kyuyo_list, nensyu_list):
+        print(name)
+        print(copy)
+        print(status)
+        print(zyoken)
+        print(work)
+        print(taisyo)
+        print(kinmu)
+        print(kyuyo)
+        print(nensyu)
+    return
+
+### main処理
+def main():
+    # driverを起動
+    driver=set_driver("chromedriver.exe",True)
+
+    # 検索結果出力（先頭ページ）
+    outFirsttPage(driver)
+
+    # 検索結果出力（次ページ）
+    while True:
+        if driver.find_elements_by_class_name('iconFont--arrowLeft'):
+            element=driver.find_element_by_class_name('iconFont--arrowLeft')
+            url=element.get_attribute("href")
+            outNextPage(driver, url)
+        else:
+            break
     driver.close()
 
 ### 直接起動された場合はmain()を起動(モジュールとして呼び出された場合は起動しないようにするため)
