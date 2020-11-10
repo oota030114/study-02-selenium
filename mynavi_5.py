@@ -16,9 +16,9 @@ def set_driver(driver_path,headless_flg):
     # 起動オプションの設定
     options.add_argument('--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.116 Safari/537.36')
     #options.add_argument('log-level=3')
-    options.add_argument('--ignore-certificate-errors')    # 証明書警告画面を回避
-    options.add_argument('--ignore-ssl-errors')    # SSLエラー画面を回避
-    options.add_argument('--incognito')          # シークレットモードの設定を付与
+    options.add_argument('--ignore-certificate-errors')     # 証明書警告画面を回避
+    options.add_argument('--ignore-ssl-errors')             # SSLエラー画面を回避
+    options.add_argument('--incognito')                     # シークレットモードの設定を付与
 
     # ChromeのWebDriverオブジェクトを作成する。(chromedriver.exeのパスにPythonソースのパスを使用)
     return Chrome(executable_path=os.getcwd() + "\\" + driver_path,options=options)
@@ -44,7 +44,7 @@ def getCopy(driver):
     # 企業ループ
     copy_list=[]
     for index in range(len(kData)):
-        copy=kData[index].find_elements_by_class_name('cassetteRecruit__copy')
+        copy=kData[index].find_elements_by_class_name('cassetteRecruit__copy a')
         copy_list.append(copy[0].text)
         
     return copy_list
@@ -130,25 +130,15 @@ def outFirstPage(driver, search_keyword):
     kyuyo_list=getTable(driver,'給与')
     nensyu_list=getTable(driver,'初年度年収')
     
-    # ページ情報を出力
-    csvList=[]
-    print("{},{},{},{},{},{},{},{},{}".format(len(name_list),len(copy_list),len(status_list),len(zyoken_list),len(work_list),len(taisyo_list),len(kinmu_list),len(kyuyo_list),len(nensyu_list)))
-    for name,copy,status,zyoken,work,taisyo,kinmu,kyuyo,nensyu in zip(name_list, copy_list, status_list, zyoken_list, work_list, taisyo_list, kinmu_list, kyuyo_list, nensyu_list):
-        csvData=[]
-        csvData.insert(0, name)
-        csvData.append(copy)
-        csvData.append(status)
-        csvData.append(zyoken)
-        csvData.append(work)
-        csvData.append(taisyo)
-        csvData.append(kinmu)
-        csvData.append(kyuyo)
-        csvData.append(nensyu)
-        csvList.append(csvData)
-        # print(csvData)
-    return csvList
+    # CSV ファイル出力
+    csvData=[]
+    csvData={"社名":name_list,"コピー":copy_list,"契約形態":status_list,"応募条件":zyoken_list,"仕事内容":work_list,"対象となる方":taisyo_list,"勤務地":kinmu_list,"給与":kyuyo_list,"初年度年収":nensyu_list}
+    df = pd.DataFrame(csvData)
+    df.to_csv("mynavi.csv", index=False)
 
-def outNextPage(driver, url, csvList):
+    return
+
+def outNextPage(driver, url):
     # Webサイトを開く
     driver.get(url)
     time.sleep(10)
@@ -164,31 +154,14 @@ def outNextPage(driver, url, csvList):
     kinmu_list=getTable(driver,'勤務地')
     kyuyo_list=getTable(driver,'給与')
     nensyu_list=getTable(driver,'初年度年収')
-    
-    # ページ情報を出力
-    print("{},{},{},{},{},{},{},{},{}".format(len(name_list),len(copy_list),len(status_list),len(zyoken_list),len(work_list),len(taisyo_list),len(kinmu_list),len(kyuyo_list),len(nensyu_list)))
-    for name,copy,status,zyoken,work,taisyo,kinmu,kyuyo,nensyu in zip(name_list, copy_list, status_list, zyoken_list, work_list, taisyo_list, kinmu_list, kyuyo_list, nensyu_list):
-        csvData=[]
-        csvData.insert(0, name)
-        csvData.append(copy)
-        csvData.append(status)
-        csvData.append(zyoken)
-        csvData.append(work)
-        csvData.append(taisyo)
-        csvData.append(kinmu)
-        csvData.append(kyuyo)
-        csvData.append(nensyu)
-        csvList.append(csvData)
-    return csvList
 
-### CSV出力
-def outCSV(csvList):
     # CSV ファイル出力
-    df = pd.DataFrame(['社名', 'コピー', '契約形態', '応募条件', '仕事内容', '対象となる方', '勤務地', '給与', '初年度年収'])
-    df.to_csv("mynavi.csv", index=False)
-    for data in csvList:
-        df = pd.DataFrame(data)
-        df.to_csv("mynavi.csv", index=False, mode='a')
+    csvData=[]
+    csvData={"社名":name_list,"コピー":copy_list,"契約形態":status_list,"応募条件":zyoken_list,"仕事内容":work_list,"対象となる方":taisyo_list,"勤務地":kinmu_list,"給与":kyuyo_list,"初年度年収":nensyu_list}
+    df = pd.DataFrame(csvData)
+    df.to_csv("mynavi.csv", index=False, mode='a')
+
+    return
 
 ### main処理
 def main():
@@ -206,13 +179,10 @@ def main():
         if driver.find_elements_by_class_name('iconFont--arrowLeft'):
             element=driver.find_element_by_class_name('iconFont--arrowLeft')
             url=element.get_attribute("href")
-            outNextPage(driver, url, csvList)
+            outNextPage(driver, url)
         else:
             break
     driver.close()
-
-    # CSV出力
-    outCSV(csvList)
 
 ### 直接起動された場合はmain()を起動(モジュールとして呼び出された場合は起動しないようにするため)
 if __name__ == "__main__":
