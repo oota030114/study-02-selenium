@@ -165,13 +165,13 @@ def outNextPage(driver, url):
 
 ### main処理
 def main():
-    # 検索キーワード入力
-    keyWord = input('検索キーワードを入力してください: ')
-
-    # driverを起動
-    driver=set_driver("chromedriver.exe",True)
-
     try:
+        # 検索キーワード入力
+        keyWord = input('検索キーワードを入力してください: ')
+
+        # driverを起動
+        driver=set_driver("chromedriver.exe",False)
+
         # 検索結果出力（先頭ページ）
         csvList = outFirstPage(driver, keyWord)
 
@@ -187,7 +187,7 @@ def main():
         print('エラーが発生しました！')
     finally:
         print('処理が終了しました！')
-        driver.close()
+        # driver.close()
 
 ### 直接起動された場合はmain()を起動(モジュールとして呼び出された場合は起動しないようにするため)
 if __name__ == "__main__":
