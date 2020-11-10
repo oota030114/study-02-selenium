@@ -85,8 +85,8 @@ def getZyoken(driver):
 ### テーブル情報取得
 def getTable(driver,colName):
     #テーブル情報取得
-    tableData = driver.find_elements_by_class_name('cassetteRecruit__main')
-
+    # tableData = driver.find_elements_by_class_name('cassetteRecruit__main*')
+    tableData = driver.find_elements_by_css_selector('div[class^="cassetteRecruit__main"]')
     # ループ：企業
     table_list=[]
     for index in range(len(tableData)):
@@ -147,7 +147,7 @@ def outFirsttPage(driver):
 def outNextPage(driver, url):
     # Webサイトを開く
     driver.get(url)
-    time.sleep(5)
+    time.sleep(10)
 
     # 検索結果を取得
     name_list=getName(driver)       #社名
