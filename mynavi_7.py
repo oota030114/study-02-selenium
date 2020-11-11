@@ -5,7 +5,10 @@ import selenium.webdriver as aa
 import pandas as pd
 import logging
 from _stat import filemode
+
 fmt='[%(asctime)s]  %(filename)s(%(lineno)d): %(message)s'
+DISCONNECTED_MSG = 'Unable to evaluate script: disconnected: not connected to DevTools\n'
+
 logging.basicConfig(
     filename='mynavi.log',			# ログファイル名
     filemode='w', 					# w：上書き a：追記
@@ -51,11 +54,12 @@ def getName(driver):
             logging.info('社名 ' + str(cnt) + '件目取得')
             cnt = cnt + 1
     except:
-        print('error:getName')
+        print('社名取得エラー {}件目'.format(str(cnt)))
+        logging.error('社名取得エラー {}件目'.format(str(cnt)))
     finally:
         return name_list
 
-### セールスコピー取得
+### コピー取得
 def getCopy(driver):
     try:
         #企業情報取得
@@ -70,7 +74,8 @@ def getCopy(driver):
             logging.info('コピー ' + str(cnt) + '件目取得')
             cnt = cnt + 1
     except:
-        print('error:getCopy')
+        print('コピー取得エラー {}件目'.format(str(cnt)))
+        logging.error('コピー取得エラー {}件目'.format(str(cnt)))
     finally:
         return copy_list
 
@@ -89,7 +94,8 @@ def getStatus(driver):
             logging.info('契約形態 ' + str(cnt) + '件目取得')
             cnt = cnt + 1
     except:
-        print('error:getStatus')
+        print('契約形態取得エラー {}件目'.format(str(cnt)))
+        logging.error('契約形態取得エラー {}件目'.format(str(cnt)))
     finally:
         return status_list
 
@@ -110,10 +116,11 @@ def getZyoken(driver):
                 else:
                     strZyoken = strZyoken + " " + data.text
             zyoken_list.append(strZyoken)
-            logging.info('応募条件 ' + str(cnt) + '件目取得')
+            logging.info('応募条件 {}件目取得'.format(str(cnt)))
             cnt = cnt + 1
     except:
-        print('error:getZyoken cnt= ' + str(cnt))
+        print('応募条件取得エラー {}件目'.format(str(cnt)))
+        logging.error('応募条件取得エラー {}件目'.format(str(cnt)))
     finally:
         return zyoken_list
 
@@ -136,13 +143,12 @@ def getTable(driver,colName):
                     strZyoken=body.text
             table_list.append(strZyoken)
             logging.info(colName + ' ' + str(cnt) + '件目取得')
-            # logging.info(str(colName) + ' ' + str(cnt) + '件目取得')
             cnt = cnt + 1
-    except Exception as e:
-        print('error:getTable colName=' + colName)
-        logging.info('error:getTable colName=' + colName)
-        logging.error(e)
-    return table_list
+    except Exception:
+        print('{}取得エラー}'.format(colName))
+        logging.error('getTable colName=' + colName)
+    else:
+        return table_list
 
 
 def outFirstPage(driver, search_keyword):
@@ -176,12 +182,10 @@ def outFirstPage(driver, search_keyword):
         csvData={"社名":name_list,"コピー":copy_list,"契約形態":status_list,"応募条件":zyoken_list,"仕事内容":work_list,"対象となる方":taisyo_list,"勤務地":kinmu_list,"給与":kyuyo_list,"初年度年収":nensyu_list}
         df = pd.DataFrame(csvData)
         df.to_csv("mynavi.csv", index=False)
-    except Exception as e:
-        logging.info('outFirstPage error: ')
-        logging.error(e)
-        driver.close()
-
-    return
+    except Exception:
+        return False
+    else:
+        return True
 
 def outNextPage(driver, url):
     try:
@@ -206,18 +210,15 @@ def outNextPage(driver, url):
         csvData={"社名":name_list,"コピー":copy_list,"契約形態":status_list,"応募条件":zyoken_list,"仕事内容":work_list,"対象となる方":taisyo_list,"勤務地":kinmu_list,"給与":kyuyo_list,"初年度年収":nensyu_list}
         df = pd.DataFrame(csvData)
         df.to_csv("mynavi.csv", index=False, mode='a')
-    except Exception as e:
-        logging.info('outNextPage error: ')
-        logging.error(e)
-        driver.close()
+    except Exception:
+        return False
+    else:
+        return True
     
-    return
-
 ### main処理
 def main():
     try:
         logging.info('main 処理開始')
-        
         
         # 検索キーワード入力
         keyWord = input('検索キーワードを入力してください: ')
@@ -230,11 +231,11 @@ def main():
         # 検索結果出力（先頭ページ）
         logging.info('main 先頭ページ 出力開始')
         pageCnt=1
-        # logging.info('outFirstPage ' + str(pageCnt) + ' ページ目の出力開始')
         logging.info('outFirstPage {} ページ目の出力開始'.format(str(pageCnt)))
-        csvList = outFirstPage(driver, keyWord)
-        # logging.info('outFirstPage ' + str(pageCnt) + ' ページ目の出力終了')
-        logging.info('outFirstPage {} ページ目の出力終了'.format(str(pageCnt)))
+        if outFirstPage(driver, keyWord):
+            logging.info('outFirstPage {} ページ目の出力終了'.format(str(pageCnt)))
+        else:
+            logging.info('outFirstPage {} ページ目で出力エラー'.format(str(pageCnt)))
 
         # 検索結果出力（次ページ）
         while True:
@@ -242,21 +243,24 @@ def main():
                 element=driver.find_element_by_class_name('iconFont--arrowLeft')
                 url=element.get_attribute("href")
                 pageCnt=pageCnt+1
-                # logging.info('outNextPage ' + str(pageCnt) + ' ページ目の出力開始')
                 logging.info('outNextPage {} ページ目の出力開始'.format(str(pageCnt)))
-                outNextPage(driver, url)
-                # logging.info('outNextPage ' + str(pageCnt) + ' ページ目の出力終了')
-                logging.info('outNextPage {} ページ目の出力終了'.format(str(pageCnt)))
-                
+                if outNextPage(driver, url):
+                    logging.info('outNextPage {} ページ目の出力終了'.format(str(pageCnt)))
+                else:
+                    logging.info('outNextPage {} ページ目で出力エラー'.format(str(pageCnt)))
             else:
                 break
     except Exception as e:
-        logging.info('main error: ')
-        logging.error(e)
+        if driver.get_log('driver')[-1]['message'] == DISCONNECTED_MSG:
+            print('Browser window closed by user')
+            logging.error('main Browser window closed by user')
         print('main 異常終了')
-    finally:
-        logging.info('main 処理終了')
-        print('main 処理終了')
+        logging.info('main 異常終了')
+    else:
+        driver.close()
+        print('main 正常終了')
+        logging.info('main 正常終了')
+        
     
 
 ### 直接起動された場合はmain()を起動(モジュールとして呼び出された場合は起動しないようにするため)
