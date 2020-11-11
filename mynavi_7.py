@@ -218,6 +218,7 @@ def main():
     try:
         logging.info('main 処理開始')
         
+        
         # 検索キーワード入力
         keyWord = input('検索キーワードを入力してください: ')
         
@@ -229,9 +230,11 @@ def main():
         # 検索結果出力（先頭ページ）
         logging.info('main 先頭ページ 出力開始')
         pageCnt=1
-        logging.info('outFirstPage ' + str(pageCnt) + ' ページ目の出力開始')
+        # logging.info('outFirstPage ' + str(pageCnt) + ' ページ目の出力開始')
+        logging.info('outFirstPage {} ページ目の出力開始'.format(str(pageCnt)))
         csvList = outFirstPage(driver, keyWord)
-        logging.info('outFirstPage ' + str(pageCnt) + ' ページ目の出力終了')
+        # logging.info('outFirstPage ' + str(pageCnt) + ' ページ目の出力終了')
+        logging.info('outFirstPage {} ページ目の出力終了'.format(str(pageCnt)))
 
         # 検索結果出力（次ページ）
         while True:
@@ -239,9 +242,12 @@ def main():
                 element=driver.find_element_by_class_name('iconFont--arrowLeft')
                 url=element.get_attribute("href")
                 pageCnt=pageCnt+1
-                logging.info('outNextPage ' + str(pageCnt) + ' ページ目の出力開始')
+                # logging.info('outNextPage ' + str(pageCnt) + ' ページ目の出力開始')
+                logging.info('outNextPage {} ページ目の出力開始'.format(str(pageCnt)))
                 outNextPage(driver, url)
-                logging.info('outNextPage ' + str(pageCnt) + ' ページ目の出力終了')
+                # logging.info('outNextPage ' + str(pageCnt) + ' ページ目の出力終了')
+                logging.info('outNextPage {} ページ目の出力終了'.format(str(pageCnt)))
+                
             else:
                 break
     except Exception as e:
